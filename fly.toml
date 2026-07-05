@@ -1,0 +1,22 @@
+app = "botloui"
+primary_region = "iad"
+
+[[services]]
+  internal_port = 3000
+  protocol = "tcp"
+
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+    force_https = true
+
+  [[services.ports]]
+    port = 443
+    handlers = ["tls", "http"]
+
+  [[services.concurrency]]
+    type = "requests"
+    hard_limit = 50
+
+[env]
+  NODE_ENV = "production"
