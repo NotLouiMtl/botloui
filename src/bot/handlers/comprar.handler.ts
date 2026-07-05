@@ -1,0 +1,33 @@
+import { Telegraf } from 'telegraf';
+import { UsersService } from '../../users/users.service';
+import { PurchasesService } from '../../purchases/purchases.service';
+
+export function registerComprarHandler(bot: Telegraf, usersService: UsersService, purchasesService: PurchasesService) {
+  bot.command('comprar', async (ctx) => {
+    const text = ctx.message.text;
+    const args = text.split(' ');
+    if (args.length < 2) return ctx.reply('Usa: /comprar <ID del servicio>');
+
+    const serviceId = parseInt(args[1]);
+    if (isNaN(serviceId)) return ctx.reply('ID invalido.');
+
+    try {
+      const user = await usersService.findByTelegramId(BigInt(ctx.from.id));
+      if (!user) return ctx.reply('No estas registrado. Usa /start');
+
+      const profile = await purchasesService.comprar(user.id, serviceId);
+
+      const pinText = profile.pin
+        ? `\nPIN del perfil: ${profile.pin}`
+        : profile.account.pin
+          ? `\nPIN: ${profile.account.pin}`
+          : '';
+
+      ctx.reply(
+        `Compra exitosa!\n\nCuenta: ${profile.account.email}\nPassword: ${profile.account.password}${pinText}\nPerfil: #${profile.profileNumber}\n\nEste perfil expira en 30 días.`
+      );
+    } catch (error: any) {
+      ctx.reply(error.message || 'Error al procesar la compra.');
+    }
+  });
+}

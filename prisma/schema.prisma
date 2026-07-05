@@ -1,0 +1,118 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model User {
+  id           Int            @id @default(autoincrement())
+  telegramId   BigInt         @unique
+  username     String?
+  password     String?        @default("")
+  saldo        Decimal        @default(0.00)
+  role         Role           @default(USER)
+  isBlocked    Boolean        @default(false)
+  createdAt    DateTime       @default(now())
+
+  profiles     Profile[]
+  purchases    Purchase[]
+  transactions Transaction[]
+  deposits     Deposit[]
+  devices      Device[]
+}
+
+model Service {
+  id        Int        @id @default(autoincrement())
+  name      String
+  price     Decimal
+  active    Boolean    @default(true)
+
+  accounts  Account[]
+  purchases Purchase[]
+}
+
+model Account {
+  id         Int       @id @default(autoincrement())
+  serviceId  Int
+  email      String
+  password   String
+  pin        String?
+  status     String    @default("active") // active, banned, dead
+  createdAt  DateTime  @default(now())
+
+  service    Service   @relation(fields: [serviceId], references: [id])
+  profiles   Profile[]
+}
+
+model Profile {
+  id           Int       @id @default(autoincrement())
+  accountId    Int
+  profileNumber Int
+  pin          String?
+  isOccupied   Boolean   @default(false)
+  assignedToId Int?
+  assignedAt   DateTime?
+
+  account      Account   @relation(fields: [accountId], references: [id])
+  assignedTo   User?     @relation(fields: [assignedToId], references: [id])
+
+  purchase     Purchase?
+
+  @@unique([accountId, profileNumber])
+}
+
+model Purchase {
+  id         Int       @id @default(autoincrement())
+  userId     Int
+  serviceId  Int
+  profileId  Int       @unique
+  price      Decimal
+  status     String    @default("completed") // completed, refunded, expired
+  expiresAt  DateTime?
+  createdAt  DateTime  @default(now())
+
+  user       User      @relation(fields: [userId], references: [id])
+  service    Service   @relation(fields: [serviceId], references: [id])
+  profile    Profile   @relation(fields: [profileId], references: [id])
+}
+
+model Transaction {
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  type        String    // deposit, purchase, refund
+  amount      Decimal
+  description String?
+  createdAt   DateTime  @default(now())
+
+  user        User      @relation(fields: [userId], references: [id])
+}
+
+model Deposit {
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  amount      Decimal
+  method      String    // oxxo, transferencia, crypto, etc
+  status      String    @default("pending") // pending, approved, rejected
+  reference   String?
+  createdAt   DateTime  @default(now())
+
+  user        User      @relation(fields: [userId], references: [id])
+}
+
+model Device {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  ip         String
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  user       User     @relation(fields: [userId], references: [id])
+}
