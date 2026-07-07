@@ -36,6 +36,6 @@ export class BotService implements OnModuleInit {
   }
 
   getWebhookMiddleware() {
-    return this.bot.webhookCallback('/bot');
+    return this.bot.webhookCallback('/');
   }
 }
