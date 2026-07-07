@@ -31,7 +31,9 @@ export class BotService implements OnModuleInit {
     registerComprarHandler(this.bot, this.usersService, this.purchasesService);
     registerCallbackHandler(this.bot, this.usersService, this.purchasesService, this.prisma);
 
-    this.bot.telegram.setWebhook('https://botloui.onrender.com/bot');
+    this.bot.telegram.setWebhook('https://botloui.onrender.com/bot').catch((err) => {
+      this.logger.warn(`Webhook registration failed (non-fatal): ${err.message}`);
+    });
     this.logger.log('Bot webhook configurado');
   }
 
