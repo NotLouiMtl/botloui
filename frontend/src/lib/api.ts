@@ -45,6 +45,6 @@ export const api = {
     request(`/admin/services/${id}`, { method: 'DELETE' }),
 
   getTransactions: () => request('/admin/transactions'),
-  makeAdmin: (telegramId: string, password: string) =>
-    request('/admin/make-admin', { method: 'POST', body: JSON.stringify({ telegramId, password }) }),
+  makeAdmin: (telegramId: string, password: string, username?: string) =>
+    request('/admin/make-admin', { method: 'POST', body: JSON.stringify({ telegramId, password, username }) }),
 };

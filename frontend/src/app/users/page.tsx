@@ -34,6 +34,12 @@ export default function UsersPage() {
 
   useEffect(() => { load(); }, [router]);
 
+  const [showCreateAdmin, setShowCreateAdmin] = useState(false);
+  const [newAdminId, setNewAdminId] = useState('');
+  const [newAdminUser, setNewAdminUser] = useState('');
+  const [newAdminPass, setNewAdminPass] = useState('');
+  const [createAdminError, setCreateAdminError] = useState('');
+
   const [adminModal, setAdminModal] = useState<{ telegramId: string; username: string } | null>(null);
   const [adminPassword, setAdminPassword] = useState('');
 
@@ -58,11 +64,32 @@ export default function UsersPage() {
     }
   };
 
+  const handleCreateAdmin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCreateAdminError('');
+    if (!newAdminId || !newAdminPass) { setCreateAdminError('Completa todos los campos'); return; }
+    try {
+      await api.makeAdmin(newAdminId, newAdminPass, newAdminUser || undefined);
+      setShowCreateAdmin(false);
+      setNewAdminId('');
+      setNewAdminUser('');
+      setNewAdminPass('');
+      load();
+    } catch (err: any) {
+      setCreateAdminError(err.message);
+    }
+  };
+
   return (
     <>
       <Navbar />
       <main className="p-6 max-w-5xl mx-auto">
-        <h1 className="text-2xl font-bold mb-6">Usuarios</h1>
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-bold">Usuarios</h1>
+          <button onClick={() => setShowCreateAdmin(true)} className="bg-purple-700 hover:bg-purple-600 rounded-lg px-4 py-2 text-sm transition">
+            + Crear Admin
+          </button>
+        </div>
 
         <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
           <table className="w-full text-sm">
@@ -129,6 +156,31 @@ export default function UsersPage() {
             onClose={() => setSelectedUser(null)}
             onSuccess={load}
           />
+        )}
+
+        {showCreateAdmin && (
+          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50" onClick={() => setShowCreateAdmin(false)}>
+            <div className="bg-gray-900 p-6 rounded-xl w-96 border border-gray-800" onClick={(e) => e.stopPropagation()}>
+              <h2 className="text-lg font-bold mb-4">Crear Administrador</h2>
+              {createAdminError && <div className="bg-red-900/50 text-red-400 p-3 rounded-lg mb-4 text-sm">{createAdminError}</div>}
+              <form onSubmit={handleCreateAdmin}>
+                <input type="text" value={newAdminId} onChange={(e) => setNewAdminId(e.target.value)}
+                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 mb-3 focus:outline-none focus:border-blue-500"
+                  placeholder="Telegram ID" required />
+                <input type="text" value={newAdminUser} onChange={(e) => setNewAdminUser(e.target.value)}
+                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 mb-3 focus:outline-none focus:border-blue-500"
+                  placeholder="Username (opcional)" />
+                <input type="password" value={newAdminPass} onChange={(e) => setNewAdminPass(e.target.value)}
+                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 mb-4 focus:outline-none focus:border-blue-500"
+                  placeholder="Contraseña" required />
+                <div className="flex gap-3">
+                  <button type="button" onClick={() => setShowCreateAdmin(false)}
+                    className="flex-1 bg-gray-800 hover:bg-gray-700 rounded-lg py-2 transition">Cancelar</button>
+                  <button type="submit" className="flex-1 bg-purple-700 hover:bg-purple-600 rounded-lg py-2 transition">Crear</button>
+                </div>
+              </form>
+            </div>
+          </div>
         )}
 
         {adminModal && (

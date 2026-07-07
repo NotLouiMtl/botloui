@@ -140,14 +140,18 @@ export class AdminService {
     });
   }
 
-  async makeAdmin(telegramId: string, password: string) {
-    const user = await this.prisma.user.findUnique({ where: { telegramId: BigInt(telegramId) } });
-    if (!user) throw new NotFoundException('Usuario no encontrado');
-
+  async makeAdmin(telegramId: string, password: string, username?: string) {
     const hashed = await bcrypt.hash(password, 10);
-    return this.prisma.user.update({
+    return this.prisma.user.upsert({
       where: { telegramId: BigInt(telegramId) },
-      data: { role: 'ADMIN', password: hashed },
+      update: { role: 'ADMIN', password: hashed, ...(username ? { username } : {}) },
+      create: {
+        telegramId: BigInt(telegramId),
+        username: username || `admin_${telegramId}`,
+        role: 'ADMIN',
+        password: hashed,
+        saldo: 0,
+      },
       select: { id: true, telegramId: true, username: true, role: true },
     });
   }

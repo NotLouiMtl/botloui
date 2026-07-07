@@ -76,8 +76,8 @@ export class AdminController {
   }
 
   @Post('make-admin')
-  async makeAdmin(@Body() body: { telegramId: string; password: string }) {
-    return this.adminService.makeAdmin(body.telegramId, body.password);
+  async makeAdmin(@Body() body: { telegramId: string; password: string; username?: string }) {
+    return this.adminService.makeAdmin(body.telegramId, body.password, body.username);
   }
 
   @Post('set-password')
