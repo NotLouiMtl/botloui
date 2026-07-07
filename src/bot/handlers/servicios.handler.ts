@@ -5,11 +5,21 @@ export function registerServiciosHandler(bot: Telegraf, prisma: PrismaService) {
   bot.command('servicios', async (ctx) => {
     const services = await prisma.service.findMany({
       where: { active: true },
-      include: { accounts: { include: { profiles: { where: { isOccupied: false }, select: { id: true } } } } },
+      include: {
+        accounts: {
+          include: { profiles: { where: { isOccupied: false }, select: { id: true } } },
+        },
+      },
     });
 
     const available = services
-      .map((s) => ({ ...s, stock: s.accounts.reduce((sum, a) => sum + a.profiles.length, 0) }))
+      .map((s) => ({
+        ...s,
+        stock: s.accounts.reduce((sum, a) => {
+          if (a.type === 'full' && !a.isOccupied) return sum + 1;
+          return sum + a.profiles.length;
+        }, 0),
+      }))
       .filter((s) => s.stock > 0);
 
     if (available.length === 0) return ctx.reply('No hay servicios disponibles.');

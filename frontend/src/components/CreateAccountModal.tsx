@@ -14,6 +14,7 @@ export default function CreateAccountModal({ onClose, onSuccess }: Props) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [pin, setPin] = useState('');
+  const [type, setType] = useState('profile'); // "full" o "profile"
   const [profiles, setProfiles] = useState('5');
   const [profilePins, setProfilePins] = useState<string[]>(['', '', '', '', '']);
   const [loading, setLoading] = useState(false);
@@ -36,8 +37,9 @@ export default function CreateAccountModal({ onClose, onSuccess }: Props) {
         email,
         password,
         pin: pin || undefined,
-        profiles: numProfiles,
-        profilePins: profilePins.slice(0, numProfiles).map((p) => p || undefined) as any,
+        type,
+        profiles: type === 'profile' ? numProfiles : undefined,
+        profilePins: type === 'profile' ? profilePins.slice(0, numProfiles).map((p) => p || undefined) as any : undefined,
       });
       onSuccess();
       onClose();
@@ -51,7 +53,7 @@ export default function CreateAccountModal({ onClose, onSuccess }: Props) {
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50" onClick={onClose}>
       <div className="bg-gray-900 p-6 rounded-xl w-96 border border-gray-800 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-        <h2 className="text-lg font-bold mb-4">Crear cuenta + perfiles</h2>
+        <h2 className="text-lg font-bold mb-4">Agregar stock</h2>
 
         {error && <div className="bg-red-900/50 text-red-400 p-3 rounded-lg mb-4 text-sm">{error}</div>}
 
@@ -67,6 +69,17 @@ export default function CreateAccountModal({ onClose, onSuccess }: Props) {
               <option key={s.id} value={s.id}>{s.name}</option>
             ))}
           </select>
+
+          <div className="flex gap-3 mb-3">
+            <button type="button" onClick={() => setType('full')}
+              className={`flex-1 py-2 rounded-lg text-sm transition ${type === 'full' ? 'bg-blue-600' : 'bg-gray-800 hover:bg-gray-700'}`}>
+              Cuenta completa
+            </button>
+            <button type="button" onClick={() => setType('profile')}
+              className={`flex-1 py-2 rounded-lg text-sm transition ${type === 'profile' ? 'bg-blue-600' : 'bg-gray-800 hover:bg-gray-700'}`}>
+              Perfiles
+            </button>
+          </div>
 
           <input
             type="text"
@@ -91,35 +104,37 @@ export default function CreateAccountModal({ onClose, onSuccess }: Props) {
             value={pin}
             onChange={(e) => setPin(e.target.value)}
             className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 mb-3 focus:outline-none focus:border-blue-500"
-            placeholder="PIN general de la cuenta (opcional)"
+            placeholder="PIN (opcional)"
           />
 
-          <input
-            type="number"
-            value={profiles}
-            onChange={(e) => {
-              setProfiles(e.target.value);
-            }}
-            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 mb-4 focus:outline-none focus:border-blue-500"
-            placeholder="Número de perfiles (1-5)"
-            min="1"
-            max="5"
-          />
+          {type === 'profile' && (
+            <>
+              <input
+                type="number"
+                value={profiles}
+                onChange={(e) => setProfiles(e.target.value)}
+                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 mb-4 focus:outline-none focus:border-blue-500"
+                placeholder="Número de perfiles (1-5)"
+                min="1"
+                max="5"
+              />
 
-          {Array.from({ length: numProfiles }, (_, i) => (
-            <input
-              key={i}
-              type="text"
-              value={profilePins[i] || ''}
-              onChange={(e) => {
-                const newPins = [...profilePins];
-                newPins[i] = e.target.value;
-                setProfilePins(newPins);
-              }}
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 mb-2 focus:outline-none focus:border-blue-500"
-              placeholder={`PIN del perfil #${i + 1} (opcional)`}
-            />
-          ))}
+              {Array.from({ length: numProfiles }, (_, i) => (
+                <input
+                  key={i}
+                  type="text"
+                  value={profilePins[i] || ''}
+                  onChange={(e) => {
+                    const newPins = [...profilePins];
+                    newPins[i] = e.target.value;
+                    setProfilePins(newPins);
+                  }}
+                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 mb-2 focus:outline-none focus:border-blue-500"
+                  placeholder={`PIN del perfil #${i + 1} (opcional)`}
+                />
+              ))}
+            </>
+          )}
 
           <div className="flex gap-3 mt-2">
             <button type="button" onClick={onClose} className="flex-1 bg-gray-800 hover:bg-gray-700 rounded-lg py-2 transition">

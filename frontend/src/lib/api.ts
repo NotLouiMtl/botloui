@@ -33,7 +33,9 @@ export const api = {
   blockUser: (telegramId: string) =>
     request('/admin/block-user', { method: 'POST', body: JSON.stringify({ telegramId }) }),
 
-  createAccount: (data: { serviceId: number; email: string; password: string; pin?: string; profiles?: number; profilePins?: (string | undefined)[] }) =>
+  convertAccount: (id: number, profiles: number) =>
+    request(`/admin/convert-account/${id}`, { method: 'POST', body: JSON.stringify({ profiles }) }),
+  createAccount: (data: { serviceId: number; email: string; password: string; pin?: string; type?: string; profiles?: number; profilePins?: (string | undefined)[] }) =>
     request('/admin/create-account', { method: 'POST', body: JSON.stringify(data) }),
 
   createService: (data: { name: string; price: number }) =>

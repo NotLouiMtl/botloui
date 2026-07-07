@@ -15,6 +15,10 @@ export class CreateStockDto {
   pin?: string;
 
   @IsOptional()
+  @IsString()
+  type?: string; // "full" o "profile"
+
+  @IsOptional()
   @IsNumber()
   @Min(1)
   profiles?: number;

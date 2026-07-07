@@ -24,6 +24,16 @@ export default function StockPage() {
 
   useEffect(() => { load(); }, [router]);
 
+  const handleConvert = async (accountId: number, profiles: number) => {
+    if (!confirm(`Convertir cuenta #${accountId} a ${profiles} perfiles?`)) return;
+    try {
+      await api.convertAccount(accountId, profiles);
+      load();
+    } catch (err: any) {
+      alert(err.message);
+    }
+  };
+
   return (
     <>
       <Navbar />
@@ -34,7 +44,7 @@ export default function StockPage() {
             onClick={() => setShowCreate(true)}
             className="bg-blue-600 hover:bg-blue-700 rounded-lg px-4 py-2 text-sm transition"
           >
-            + Crear cuenta
+            + Agregar stock
           </button>
         </div>
 
@@ -42,7 +52,7 @@ export default function StockPage() {
           <>
             <div className="grid grid-cols-3 gap-4 mb-6">
               <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-                <p className="text-sm text-gray-400">Total perfiles</p>
+                <p className="text-sm text-gray-400">Total unidades</p>
                 <p className="text-xl font-bold text-blue-400">{stock.total}</p>
               </div>
               <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
@@ -61,7 +71,9 @@ export default function StockPage() {
                   <tr className="border-b border-gray-800 text-gray-400">
                     <th className="text-left p-4">Servicio</th>
                     <th className="text-left p-4">Cuentas</th>
+                    <th className="text-left p-4">Completas</th>
                     <th className="text-left p-4">Perfiles libres</th>
+                    <th className="text-left p-4">Total disp.</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -69,7 +81,9 @@ export default function StockPage() {
                     <tr key={s.id} className="border-b border-gray-800/50 hover:bg-gray-800/30">
                       <td className="p-4">{s.name}</td>
                       <td className="p-4">{s.accounts}</td>
-                      <td className="p-4">{s.available}</td>
+                      <td className="p-4">{s.fullAvailable}</td>
+                      <td className="p-4">{s.profileAvailable}</td>
+                      <td className="p-4 font-bold">{s.available}</td>
                     </tr>
                   ))}
                 </tbody>

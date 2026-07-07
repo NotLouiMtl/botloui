@@ -13,7 +13,7 @@ export class ExpirationService {
     const now = new Date();
     const expirados = await this.prisma.purchase.findMany({
       where: { expiresAt: { lte: now }, status: 'completed' },
-      include: { profile: true },
+      include: { profile: true, account: true },
     });
 
     for (const purchase of expirados) {
@@ -24,7 +24,13 @@ export class ExpirationService {
         });
         if (purchase.profile) {
           await tx.profile.update({
-            where: { id: purchase.profileId },
+            where: { id: purchase.profile.id },
+            data: { isOccupied: false, assignedToId: null, assignedAt: null },
+          });
+        }
+        if (purchase.account) {
+          await tx.account.update({
+            where: { id: purchase.account.id },
             data: { isOccupied: false, assignedToId: null, assignedAt: null },
           });
         }
@@ -32,7 +38,7 @@ export class ExpirationService {
     }
 
     if (expirados.length > 0) {
-      this.logger.log(`Liberados ${expirados.length} perfiles expirados`);
+      this.logger.log(`Liberados ${expirados.length} items expirados`);
     }
   }
 }

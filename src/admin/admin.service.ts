@@ -40,16 +40,39 @@ export class AdminService {
     });
   }
 
-  async createStock(serviceId: number, email: string, password: string, pin?: string, profiles = 5, profilePins?: string[]) {
+  async createStock(serviceId: number, email: string, password: string, pin?: string, profiles = 5, profilePins?: string[], type = 'profile') {
     return this.prisma.$transaction(async (tx) => {
-      const account = await tx.account.create({ data: { serviceId, email, password, pin } });
+      const account = await tx.account.create({ data: { serviceId, email, password, pin, type } });
+      if (type === 'full') {
+        return { account, type: 'full' };
+      }
       const profileData = Array.from({ length: profiles }, (_, i) => ({
         accountId: account.id,
         profileNumber: i + 1,
         pin: profilePins && i < profilePins.length ? profilePins[i] || null : null,
       }));
       await tx.profile.createMany({ data: profileData });
-      return { account, profilesCreated: profiles };
+      return { account, profilesCreated: profiles, type: 'profile' };
+    });
+  }
+
+  async convertAccount(accountId: number, numProfiles: number) {
+    return this.prisma.$transaction(async (tx) => {
+      const account = await tx.account.findUnique({ where: { id: accountId } });
+      if (!account) throw new NotFoundException('Cuenta no encontrada');
+      if (account.type === 'profile') throw new Error('La cuenta ya está en modo perfiles');
+      if (account.isOccupied) throw new Error('No se puede convertir una cuenta vendida');
+
+      const profileData = Array.from({ length: numProfiles }, (_, i) => ({
+        accountId: account.id,
+        profileNumber: i + 1,
+      }));
+      await tx.profile.createMany({ data: profileData });
+      await tx.account.update({
+        where: { id: account.id },
+        data: { type: 'profile' },
+      });
+      return { accountId: account.id, profilesCreated: numProfiles };
     });
   }
 
@@ -64,23 +87,40 @@ export class AdminService {
       },
     });
 
-    const summary = byService.map((s) => ({
-      id: s.id,
-      name: s.name,
-      accounts: s.accounts.length,
-      available: s.accounts.reduce((sum, a) => sum + a.profiles.length, 0),
-    }));
+    const summary = byService.map((s) => {
+      const fullAvailable = s.accounts.filter(a => a.type === 'full' && !a.isOccupied).length;
+      const profileAvailable = s.accounts.reduce((sum, a) => {
+        if (a.type === 'profile') return sum + a.profiles.length;
+        return sum;
+      }, 0);
+      return {
+        id: s.id,
+        name: s.name,
+        accounts: s.accounts.length,
+        fullAvailable,
+        profileAvailable,
+        available: fullAvailable + profileAvailable,
+      };
+    });
 
-    const total = await this.prisma.profile.count();
-    const available = await this.prisma.profile.count({ where: { isOccupied: false } });
+    const totalFull = await this.prisma.account.count({ where: { type: 'full' } });
+    const totalProfiles = await this.prisma.profile.count();
+    const availableFull = await this.prisma.account.count({ where: { type: 'full', isOccupied: false } });
+    const availableProfiles = await this.prisma.profile.count({ where: { isOccupied: false } });
 
-    return { summary, total, available, sold: total - available };
+    return {
+      summary,
+      total: totalFull + totalProfiles,
+      available: availableFull + availableProfiles,
+      sold: (totalFull + totalProfiles) - (availableFull + availableProfiles),
+    };
   }
 
   async getStats() {
-    const [totalUsers, totalSaldo, stock, todaySales] = await Promise.all([
+    const [totalUsers, totalSaldo, availableFull, availableProfiles, todaySales] = await Promise.all([
       this.prisma.user.count(),
       this.prisma.user.aggregate({ _sum: { saldo: true } }),
+      this.prisma.account.count({ where: { type: 'full', isOccupied: false } }),
       this.prisma.profile.count({ where: { isOccupied: false } }),
       this.prisma.purchase.count({
         where: { createdAt: { gte: new Date(new Date().setHours(0, 0, 0, 0)) } },
@@ -90,7 +130,7 @@ export class AdminService {
     return {
       totalUsers,
       totalSaldo: totalSaldo._sum.saldo || 0,
-      stockAvailable: stock,
+      stockAvailable: availableFull + availableProfiles,
       todaySales,
     };
   }
@@ -118,13 +158,14 @@ export class AdminService {
   async getUserPurchases(userId: number) {
     return this.prisma.purchase.findMany({
       where: { userId },
-      include: { service: true, profile: { include: { account: true } } },
+      include: { service: true, profile: { include: { account: true } }, account: true },
       orderBy: { createdAt: 'desc' },
     });
   }
 
   async deleteService(id: number) {
     return this.prisma.$transaction(async (tx) => {
+      await tx.purchase.deleteMany({ where: { account: { serviceId: id } } });
       const profiles = await tx.profile.findMany({
         where: { account: { serviceId: id } },
         select: { id: true },

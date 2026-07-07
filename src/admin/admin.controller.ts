@@ -29,7 +29,7 @@ export class AdminController {
 
   @Post('create-account')
   async createAccount(@Body() body: CreateStockDto) {
-    return this.adminService.createStock(body.serviceId, body.email, body.password, body.pin, body.profiles, body.profilePins);
+    return this.adminService.createStock(body.serviceId, body.email, body.password, body.pin, body.profiles, body.profilePins, body.type);
   }
 
   @Get('stock')
@@ -78,6 +78,11 @@ export class AdminController {
   @Post('make-admin')
   async makeAdmin(@Body() body: { telegramId: string; password: string; username?: string }) {
     return this.adminService.makeAdmin(body.telegramId, body.password, body.username);
+  }
+
+  @Post('convert-account/:id')
+  async convertAccount(@Param('id') id: string, @Body() body: { profiles: number }) {
+    return this.adminService.convertAccount(Number(id), body.profiles || 5);
   }
 
   @Post('set-username')

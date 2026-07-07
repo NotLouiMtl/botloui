@@ -27,6 +27,7 @@ model User {
   transactions Transaction[]
   deposits     Deposit[]
   devices      Device[]
+  accountAssignments Account[]
 }
 
 model Service {
@@ -40,16 +41,22 @@ model Service {
 }
 
 model Account {
-  id         Int       @id @default(autoincrement())
-  serviceId  Int
-  email      String
-  password   String
-  pin        String?
-  status     String    @default("active") // active, banned, dead
-  createdAt  DateTime  @default(now())
+  id           Int       @id @default(autoincrement())
+  serviceId    Int
+  email        String
+  password     String
+  pin          String?
+  type         String    @default("profile") // "full" o "profile"
+  isOccupied   Boolean   @default(false)
+  assignedToId Int?
+  assignedAt   DateTime?
+  status       String    @default("active") // active, banned, dead
+  createdAt    DateTime  @default(now())
 
-  service    Service   @relation(fields: [serviceId], references: [id])
-  profiles   Profile[]
+  service      Service   @relation(fields: [serviceId], references: [id])
+  profiles     Profile[]
+  assignedTo   User?     @relation(fields: [assignedToId], references: [id])
+  purchase     Purchase?
 }
 
 model Profile {
@@ -73,7 +80,8 @@ model Purchase {
   id         Int       @id @default(autoincrement())
   userId     Int
   serviceId  Int
-  profileId  Int       @unique
+  profileId  Int?      @unique
+  accountId  Int?      @unique
   price      Decimal
   status     String    @default("completed") // completed, refunded, expired
   expiresAt  DateTime?
@@ -81,7 +89,8 @@ model Purchase {
 
   user       User      @relation(fields: [userId], references: [id])
   service    Service   @relation(fields: [serviceId], references: [id])
-  profile    Profile   @relation(fields: [profileId], references: [id])
+  profile    Profile?  @relation(fields: [profileId], references: [id])
+  account    Account?  @relation(fields: [accountId], references: [id])
 }
 
 model Transaction {

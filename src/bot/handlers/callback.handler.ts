@@ -41,17 +41,25 @@ export function registerCallbackHandler(bot: Telegraf, usersService: UsersServic
         const user = await usersService.findByTelegramId(BigInt(ctx.from.id));
         if (!user) return ctx.reply('No estas registrado. Usa /start');
 
-        const profile = await purchasesService.comprar(user.id, serviceId);
+        const result = await purchasesService.comprar(user.id, serviceId);
 
-        const pinText = profile.pin
-          ? `\nPIN del perfil: ${profile.pin}`
-          : profile.account.pin
-            ? `\nPIN: ${profile.account.pin}`
-            : '';
-
-        await ctx.editMessageText(
-          `✅ Compra exitosa!\n\nCuenta: ${profile.account.email}\nPassword: ${profile.account.password}${pinText}\nPerfil: #${profile.profileNumber}\n\nEste perfil expira en 30 días.`
-        );
+        if (result.type === 'full' && result.account) {
+          const a = result.account;
+          const pinText = a.pin ? `\nPIN: ${a.pin}` : '';
+          await ctx.editMessageText(
+            `✅ Compra exitosa!\n\nCuenta: ${a.email}\nPassword: ${a.password}${pinText}\n\nEsta cuenta expira en 30 días.`
+          );
+        } else if (result.profile) {
+          const profile = result.profile;
+          const pinText = profile.pin
+            ? `\nPIN del perfil: ${profile.pin}`
+            : profile.account.pin
+              ? `\nPIN: ${profile.account.pin}`
+              : '';
+          await ctx.editMessageText(
+            `✅ Compra exitosa!\n\nCuenta: ${profile.account.email}\nPassword: ${profile.account.password}${pinText}\nPerfil: #${profile.profileNumber}\n\nEste perfil expira en 30 días.`
+          );
+        }
       } catch (error: any) {
         ctx.reply(error.message || 'Error al procesar la compra.');
       }
