@@ -30,7 +30,7 @@ export function registerCallbackHandler(bot: Telegraf, usersService: UsersServic
         Markup.button.callback(`${s.name} - $${s.price} (${s.stock} disp.)`, `buy_${s.id}`),
       ]);
 
-      return ctx.reply('Seleccioná un servicio:', { reply_markup: { inline_keyboard: keyboard } });
+      return ctx.reply('Selecciona un servicio:', { reply_markup: { inline_keyboard: keyboard } });
     }
 
     if (data.startsWith('buy_')) {
