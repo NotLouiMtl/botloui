@@ -88,7 +88,7 @@ export class AdminService {
     });
 
     const summary = byService.map((s) => {
-      const fullAvailable = s.accounts.filter(a => a.type === 'full' && !a.isOccupied).length;
+      const fullAccounts = s.accounts.filter(a => a.type === 'full' && !a.isOccupied);
       const profileAvailable = s.accounts.reduce((sum, a) => {
         if (a.type === 'profile') return sum + a.profiles.length;
         return sum;
@@ -97,9 +97,10 @@ export class AdminService {
         id: s.id,
         name: s.name,
         accounts: s.accounts.length,
-        fullAvailable,
+        fullAvailable: fullAccounts.length,
+        fullAccounts: fullAccounts.map(a => ({ id: a.id, email: a.email, pin: a.pin })),
         profileAvailable,
-        available: fullAvailable + profileAvailable,
+        available: fullAccounts.length + profileAvailable,
       };
     });
 

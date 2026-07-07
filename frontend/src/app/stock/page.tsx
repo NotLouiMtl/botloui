@@ -9,6 +9,7 @@ import CreateAccountModal from '@/components/CreateAccountModal';
 export default function StockPage() {
   const [stock, setStock] = useState<any>(null);
   const [showCreate, setShowCreate] = useState(false);
+  const [convertProfiles, setConvertProfiles] = useState<Record<number, string>>({});
   const router = useRouter();
 
   const load = async () => {
@@ -24,10 +25,15 @@ export default function StockPage() {
 
   useEffect(() => { load(); }, [router]);
 
-  const handleConvert = async (accountId: number, profiles: number) => {
-    if (!confirm(`Convertir cuenta #${accountId} a ${profiles} perfiles?`)) return;
+  const handleConvert = async (accountId: number) => {
+    const n = parseInt(convertProfiles[accountId] || '5');
+    if (isNaN(n) || n < 1) return alert('Número de perfiles inválido');
+    if (!confirm(`Convertir cuenta #${accountId} a ${n} perfiles?`)) return;
     try {
-      await api.convertAccount(accountId, profiles);
+      await api.convertAccount(accountId, n);
+      const next = { ...convertProfiles };
+      delete next[accountId];
+      setConvertProfiles(next);
       load();
     } catch (err: any) {
       alert(err.message);
@@ -78,13 +84,40 @@ export default function StockPage() {
                 </thead>
                 <tbody>
                   {stock.summary.map((s: any) => (
-                    <tr key={s.id} className="border-b border-gray-800/50 hover:bg-gray-800/30">
-                      <td className="p-4">{s.name}</td>
-                      <td className="p-4">{s.accounts}</td>
-                      <td className="p-4">{s.fullAvailable}</td>
-                      <td className="p-4">{s.profileAvailable}</td>
-                      <td className="p-4 font-bold">{s.available}</td>
-                    </tr>
+                    <>
+                      <tr key={s.id} className="border-b border-gray-800/50 hover:bg-gray-800/30">
+                        <td className="p-4 font-medium">{s.name}</td>
+                        <td className="p-4">{s.accounts}</td>
+                        <td className="p-4">{s.fullAvailable}</td>
+                        <td className="p-4">{s.profileAvailable}</td>
+                        <td className="p-4 font-bold">{s.available}</td>
+                      </tr>
+                      {s.fullAccounts.length > 0 && s.fullAccounts.map((a: any) => (
+                        <tr key={a.id} className="border-b border-gray-800/30 bg-gray-800/20">
+                          <td className="p-3 pl-8 text-xs text-gray-400" colSpan={2}>
+                            #{a.id} — {a.email}
+                          </td>
+                          <td className="p-3">
+                            <input
+                              type="number"
+                              value={convertProfiles[a.id] || '5'}
+                              onChange={(e) => setConvertProfiles({ ...convertProfiles, [a.id]: e.target.value })}
+                              className="bg-gray-800 border border-gray-700 rounded px-2 py-1 w-16 text-xs"
+                              min="1"
+                              max="10"
+                            />
+                          </td>
+                          <td className="p-3" colSpan={2}>
+                            <button
+                              onClick={() => handleConvert(a.id)}
+                              className="bg-yellow-700 hover:bg-yellow-600 text-xs rounded px-3 py-1 transition"
+                            >
+                              Convertir a perfiles
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </>
                   ))}
                 </tbody>
               </table>
