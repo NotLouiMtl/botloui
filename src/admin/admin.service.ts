@@ -259,6 +259,24 @@ export class AdminService {
     });
   }
 
+  async deleteUser(id: number) {
+    return this.prisma.$transaction(async (tx) => {
+      const user = await tx.user.findUnique({ where: { id } });
+      if (!user) throw new NotFoundException('Usuario no encontrado');
+
+      // Free occupied profiles/accounts assigned to this user
+      await tx.profile.updateMany({ where: { assignedToId: id }, data: { isOccupied: false, assignedToId: null, assignedAt: null } });
+      await tx.account.updateMany({ where: { assignedToId: id }, data: { isOccupied: false, assignedToId: null, assignedAt: null } });
+
+      await tx.purchase.deleteMany({ where: { userId: id } });
+      await tx.transaction.deleteMany({ where: { userId: id } });
+      await tx.deposit.deleteMany({ where: { userId: id } });
+      await tx.device.deleteMany({ where: { userId: id } });
+      await tx.user.delete({ where: { id } });
+      return { deleted: true };
+    });
+  }
+
   async setUsername(userId: number, username: string) {
     return this.prisma.user.update({
       where: { id: userId },

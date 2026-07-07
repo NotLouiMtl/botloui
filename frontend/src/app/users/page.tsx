@@ -42,11 +42,35 @@ export default function UsersPage() {
 
   const [adminModal, setAdminModal] = useState<{ telegramId: string; username: string } | null>(null);
   const [adminPassword, setAdminPassword] = useState('');
+  const [passwordModal, setPasswordModal] = useState<{ telegramId: string; username: string } | null>(null);
+  const [newPassword, setNewPassword] = useState('');
 
   const handleBlock = async (telegramId: string) => {
     try {
       await api.blockUser(telegramId);
       load();
+    } catch (err: any) {
+      alert(err.message);
+    }
+  };
+
+  const handleDeleteUser = async (id: number, username: string) => {
+    if (!confirm(`Eliminar usuario "${username}" (ID ${id})?\nSe borrarán todas sus compras, transacciones y depósitos.`)) return;
+    try {
+      await api.deleteUser(id);
+      load();
+    } catch (err: any) {
+      alert(err.message);
+    }
+  };
+
+  const handleSetPassword = async () => {
+    if (!passwordModal || !newPassword) return;
+    try {
+      await api.setPassword(passwordModal.telegramId, newPassword);
+      setPasswordModal(null);
+      setNewPassword('');
+      alert('Contraseña actualizada');
     } catch (err: any) {
       alert(err.message);
     }
@@ -134,6 +158,12 @@ export default function UsersPage() {
                     >
                       {u.isBlocked ? 'Desbloquear' : 'Bloquear'}
                     </button>
+                    <button
+                      onClick={() => setPasswordModal({ telegramId: u.telegramId, username: u.username || `ID ${u.id}` })}
+                      className="text-xs px-3 py-1.5 rounded bg-yellow-700 hover:bg-yellow-600 transition ml-1"
+                    >
+                      Pass
+                    </button>
                     {u.role !== 'ADMIN' && (
                       <button
                         onClick={() => setAdminModal({ telegramId: u.telegramId, username: u.username || `ID ${u.id}` })}
@@ -142,6 +172,12 @@ export default function UsersPage() {
                         Admin
                       </button>
                     )}
+                    <button
+                      onClick={() => handleDeleteUser(u.id, u.username || `ID ${u.id}`)}
+                      className="text-xs px-3 py-1.5 rounded bg-red-700 hover:bg-red-600 transition ml-1"
+                    >
+                      Eliminar
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -198,6 +234,26 @@ export default function UsersPage() {
               <div className="flex gap-3">
                 <button onClick={() => { setAdminModal(null); setAdminPassword(''); }} className="flex-1 bg-gray-800 hover:bg-gray-700 rounded-lg py-2 transition">Cancelar</button>
                 <button onClick={handleMakeAdmin} className="flex-1 bg-purple-700 hover:bg-purple-600 rounded-lg py-2 transition">Hacer Admin</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {passwordModal && (
+          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50" onClick={() => { setPasswordModal(null); setNewPassword(''); }}>
+            <div className="bg-gray-900 p-6 rounded-xl w-96 border border-gray-800" onClick={(e) => e.stopPropagation()}>
+              <h2 className="text-lg font-bold mb-2">Cambiar contraseña</h2>
+              <p className="text-sm text-gray-400 mb-4">{passwordModal.username}</p>
+              <input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 mb-4 focus:outline-none focus:border-blue-500"
+                placeholder="Nueva contraseña"
+              />
+              <div className="flex gap-3">
+                <button onClick={() => { setPasswordModal(null); setNewPassword(''); }} className="flex-1 bg-gray-800 hover:bg-gray-700 rounded-lg py-2 transition">Cancelar</button>
+                <button onClick={handleSetPassword} className="flex-1 bg-yellow-700 hover:bg-yellow-600 rounded-lg py-2 transition">Cambiar</button>
               </div>
             </div>
           </div>

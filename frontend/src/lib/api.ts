@@ -33,6 +33,12 @@ export const api = {
   blockUser: (telegramId: string) =>
     request('/admin/block-user', { method: 'POST', body: JSON.stringify({ telegramId }) }),
 
+  deleteUser: (id: number) =>
+    request(`/admin/user/${id}`, { method: 'DELETE' }),
+
+  setPassword: (telegramId: string, password: string) =>
+    request('/admin/set-password', { method: 'POST', body: JSON.stringify({ telegramId, password }) }),
+
   convertAccount: (id: number, profiles: number) =>
     request(`/admin/convert-account/${id}`, { method: 'POST', body: JSON.stringify({ profiles }) }),
   getAllAccounts: () => request('/admin/stock/accounts'),
