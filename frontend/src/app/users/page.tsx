@@ -34,9 +34,24 @@ export default function UsersPage() {
 
   useEffect(() => { load(); }, [router]);
 
+  const [adminModal, setAdminModal] = useState<{ telegramId: string; username: string } | null>(null);
+  const [adminPassword, setAdminPassword] = useState('');
+
   const handleBlock = async (telegramId: string) => {
     try {
       await api.blockUser(telegramId);
+      load();
+    } catch (err: any) {
+      alert(err.message);
+    }
+  };
+
+  const handleMakeAdmin = async () => {
+    if (!adminModal || !adminPassword) return;
+    try {
+      await api.makeAdmin(adminModal.telegramId, adminPassword);
+      setAdminModal(null);
+      setAdminPassword('');
       load();
     } catch (err: any) {
       alert(err.message);
@@ -92,6 +107,14 @@ export default function UsersPage() {
                     >
                       {u.isBlocked ? 'Desbloquear' : 'Bloquear'}
                     </button>
+                    {u.role !== 'ADMIN' && (
+                      <button
+                        onClick={() => setAdminModal({ telegramId: u.telegramId, username: u.username || `ID ${u.id}` })}
+                        className="text-xs px-3 py-1.5 rounded bg-purple-700 hover:bg-purple-600 transition ml-1"
+                      >
+                        Admin
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -106,6 +129,26 @@ export default function UsersPage() {
             onClose={() => setSelectedUser(null)}
             onSuccess={load}
           />
+        )}
+
+        {adminModal && (
+          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50" onClick={() => { setAdminModal(null); setAdminPassword(''); }}>
+            <div className="bg-gray-900 p-6 rounded-xl w-96 border border-gray-800" onClick={(e) => e.stopPropagation()}>
+              <h2 className="text-lg font-bold mb-2">Hacer Admin</h2>
+              <p className="text-sm text-gray-400 mb-4">{adminModal.username}</p>
+              <input
+                type="password"
+                value={adminPassword}
+                onChange={(e) => setAdminPassword(e.target.value)}
+                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 mb-4 focus:outline-none focus:border-blue-500"
+                placeholder="Contraseña para el admin"
+              />
+              <div className="flex gap-3">
+                <button onClick={() => { setAdminModal(null); setAdminPassword(''); }} className="flex-1 bg-gray-800 hover:bg-gray-700 rounded-lg py-2 transition">Cancelar</button>
+                <button onClick={handleMakeAdmin} className="flex-1 bg-purple-700 hover:bg-purple-600 rounded-lg py-2 transition">Hacer Admin</button>
+              </div>
+            </div>
+          </div>
         )}
       </main>
     </>

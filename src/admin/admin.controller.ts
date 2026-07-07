@@ -75,6 +75,11 @@ export class AdminController {
     return this.adminService.getUserPurchases(Number(id));
   }
 
+  @Post('make-admin')
+  async makeAdmin(@Body() body: { telegramId: string; password: string }) {
+    return this.adminService.makeAdmin(body.telegramId, body.password);
+  }
+
   @Post('set-password')
   async setPassword(@Body() body: { telegramId: string; password: string }, @Req() req: any) {
     return this.adminService.setPassword(body.telegramId, body.password, req.user.userId);
