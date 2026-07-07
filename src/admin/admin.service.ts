@@ -56,6 +56,67 @@ export class AdminService {
     });
   }
 
+  async getAllAccounts() {
+    return this.prisma.account.findMany({
+      where: { status: 'active' },
+      include: {
+        service: { select: { id: true, name: true } },
+        profiles: { select: { id: true, profileNumber: true, pin: true, isOccupied: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async updateAccount(id: number, data: { email?: string; password?: string; pin?: string }) {
+    const account = await this.prisma.account.findUnique({ where: { id } });
+    if (!account) throw new NotFoundException('Cuenta no encontrada');
+    return this.prisma.account.update({ where: { id }, data });
+  }
+
+  async deleteAccount(id: number) {
+    return this.prisma.$transaction(async (tx) => {
+      const account = await tx.account.findUnique({ where: { id } });
+      if (!account) throw new NotFoundException('Cuenta no encontrada');
+      await tx.purchase.deleteMany({ where: { accountId: id } });
+      const profileIds = (await tx.profile.findMany({ where: { accountId: id }, select: { id: true } })).map(p => p.id);
+      await tx.purchase.deleteMany({ where: { profileId: { in: profileIds } } });
+      await tx.profile.deleteMany({ where: { accountId: id } });
+      await tx.account.delete({ where: { id } });
+      return { deleted: true };
+    });
+  }
+
+  async addProfiles(accountId: number, count: number) {
+    return this.prisma.$transaction(async (tx) => {
+      const account = await tx.account.findUnique({ where: { id: accountId }, include: { profiles: true } });
+      if (!account) throw new NotFoundException('Cuenta no encontrada');
+      if (account.isOccupied) throw new Error('No se pueden agregar perfiles a una cuenta vendida');
+      const maxNum = account.profiles.reduce((m, p) => Math.max(m, p.profileNumber), 0);
+      const data = Array.from({ length: count }, (_, i) => ({
+        accountId: account.id,
+        profileNumber: maxNum + i + 1,
+      }));
+      await tx.profile.createMany({ data });
+      return { added: count, totalProfiles: account.profiles.length + count };
+    });
+  }
+
+  async deleteProfile(id: number) {
+    const profile = await this.prisma.profile.findUnique({ where: { id }, include: { account: true } });
+    if (!profile) throw new NotFoundException('Perfil no encontrado');
+    if (profile.isOccupied) throw new Error('No se puede borrar un perfil vendido');
+    if (profile.account.type === 'full') throw new Error('No se pueden borrar perfiles de cuentas completas');
+    await this.prisma.purchase.deleteMany({ where: { profileId: id } });
+    await this.prisma.profile.delete({ where: { id } });
+    return { deleted: true };
+  }
+
+  async updateProfile(id: number, data: { pin?: string }) {
+    const profile = await this.prisma.profile.findUnique({ where: { id } });
+    if (!profile) throw new NotFoundException('Perfil no encontrado');
+    return this.prisma.profile.update({ where: { id }, data });
+  }
+
   async convertAccount(accountId: number, numProfiles: number) {
     return this.prisma.$transaction(async (tx) => {
       const account = await tx.account.findUnique({ where: { id: accountId } });

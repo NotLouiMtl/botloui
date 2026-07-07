@@ -80,6 +80,39 @@ export class AdminController {
     return this.adminService.makeAdmin(body.telegramId, body.password, body.username);
   }
 
+  @Get('stock/accounts')
+  async getAllAccounts() {
+    return this.adminService.getAllAccounts();
+  }
+
+  @Put('stock/account/:id')
+  async updateAccount(
+    @Param('id') id: string,
+    @Body() body: { email?: string; password?: string; pin?: string },
+  ) {
+    return this.adminService.updateAccount(Number(id), body);
+  }
+
+  @Delete('stock/account/:id')
+  async deleteAccount(@Param('id') id: string) {
+    return this.adminService.deleteAccount(Number(id));
+  }
+
+  @Post('stock/account/:id/profiles')
+  async addProfiles(@Param('id') id: string, @Body() body: { count: number }) {
+    return this.adminService.addProfiles(Number(id), body.count || 1);
+  }
+
+  @Delete('stock/profile/:id')
+  async deleteProfile(@Param('id') id: string) {
+    return this.adminService.deleteProfile(Number(id));
+  }
+
+  @Put('stock/profile/:id')
+  async updateProfile(@Param('id') id: string, @Body() body: { pin?: string }) {
+    return this.adminService.updateProfile(Number(id), body);
+  }
+
   @Post('convert-account/:id')
   async convertAccount(@Param('id') id: string, @Body() body: { profiles: number }) {
     return this.adminService.convertAccount(Number(id), body.profiles || 5);

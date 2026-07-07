@@ -35,6 +35,17 @@ export const api = {
 
   convertAccount: (id: number, profiles: number) =>
     request(`/admin/convert-account/${id}`, { method: 'POST', body: JSON.stringify({ profiles }) }),
+  getAllAccounts: () => request('/admin/stock/accounts'),
+  updateAccount: (id: number, data: { email?: string; password?: string; pin?: string }) =>
+    request(`/admin/stock/account/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteAccount: (id: number) =>
+    request(`/admin/stock/account/${id}`, { method: 'DELETE' }),
+  addProfiles: (id: number, count: number) =>
+    request(`/admin/stock/account/${id}/profiles`, { method: 'POST', body: JSON.stringify({ count }) }),
+  deleteProfile: (id: number) =>
+    request(`/admin/stock/profile/${id}`, { method: 'DELETE' }),
+  updateProfile: (id: number, data: { pin?: string }) =>
+    request(`/admin/stock/profile/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   createAccount: (data: { serviceId: number; email: string; password: string; pin?: string; type?: string; profiles?: number; profilePins?: (string | undefined)[] }) =>
     request('/admin/create-account', { method: 'POST', body: JSON.stringify(data) }),
 
