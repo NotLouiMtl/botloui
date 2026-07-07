@@ -156,6 +156,14 @@ export class AdminService {
     });
   }
 
+  async setUsername(userId: number, username: string) {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: { username },
+      select: { id: true, username: true, telegramId: true, role: true },
+    });
+  }
+
   async setPassword(telegramId: string, password: string, adminUserId: number) {
     const admin = await this.prisma.user.findUnique({ where: { id: adminUserId } });
     if (!admin || admin.role !== 'ADMIN') throw new ForbiddenException('Solo admins');

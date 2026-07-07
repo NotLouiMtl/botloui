@@ -10,10 +10,11 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async login(telegramId: string, password: string, ip?: string, userAgent?: string) {
-    const user = await this.prisma.user.findUnique({
-      where: { telegramId: BigInt(telegramId) },
-    });
+  async login(telegramIdOrUsername: string, password: string, ip?: string, userAgent?: string) {
+    const isNumeric = /^\d+$/.test(telegramIdOrUsername);
+    const user = isNumeric
+      ? await this.prisma.user.findUnique({ where: { telegramId: BigInt(telegramIdOrUsername) } })
+      : await this.prisma.user.findFirst({ where: { username: telegramIdOrUsername } });
 
     if (!user || user.role !== 'ADMIN') {
       throw new UnauthorizedException('Credenciales inválidas');

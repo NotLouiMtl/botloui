@@ -19,8 +19,8 @@ async function request(path: string, options?: RequestInit) {
 }
 
 export const api = {
-  login: (telegramId: string, password: string) =>
-    request('/admin/login', { method: 'POST', body: JSON.stringify({ telegramId, password }) }),
+  login: (identifier: string, password: string) =>
+    request('/admin/login', { method: 'POST', body: JSON.stringify({ [identifier.includes('@') ? 'username' : /^\d+$/.test(identifier) ? 'telegramId' : 'username']: identifier, password }) }),
 
   getStats: () => request('/admin/stats'),
   getUsers: () => request('/admin/users'),
@@ -45,6 +45,8 @@ export const api = {
     request(`/admin/services/${id}`, { method: 'DELETE' }),
 
   getTransactions: () => request('/admin/transactions'),
+  setUsername: (username: string) =>
+    request('/admin/set-username', { method: 'POST', body: JSON.stringify({ username }) }),
   makeAdmin: (telegramId: string, password: string, username?: string) =>
     request('/admin/make-admin', { method: 'POST', body: JSON.stringify({ telegramId, password, username }) }),
 };

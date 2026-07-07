@@ -35,13 +35,13 @@ export default function LoginPage() {
 
         {error && <div className="bg-red-900/50 text-red-400 p-3 rounded-lg mb-4 text-sm">{error}</div>}
 
-        <label className="block text-sm text-gray-400 mb-2">Telegram ID</label>
+        <label className="block text-sm text-gray-400 mb-2">Telegram ID o Usuario</label>
         <input
           type="text"
           value={telegramId}
           onChange={(e) => setTelegramId(e.target.value)}
           className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 mb-3 focus:outline-none focus:border-blue-500"
-          placeholder="123456789"
+          placeholder="123456789 o username"
           required
         />
 

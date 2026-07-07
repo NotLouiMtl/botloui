@@ -1,8 +1,13 @@
-import { IsString, MinLength } from 'class-validator';
+import { IsString, MinLength, IsOptional } from 'class-validator';
 
 export class LoginDto {
+  @IsOptional()
   @IsString()
-  telegramId: string;
+  telegramId?: string;
+
+  @IsOptional()
+  @IsString()
+  username?: string;
 
   @IsString()
   @MinLength(4)
