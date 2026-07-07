@@ -31,7 +31,11 @@ export class BotService implements OnModuleInit {
     registerComprarHandler(this.bot, this.usersService, this.purchasesService);
     registerCallbackHandler(this.bot, this.usersService, this.purchasesService, this.prisma);
 
-    this.bot.launch();
-    this.logger.log('Bot de Telegram iniciado');
+    this.bot.telegram.setWebhook('https://botloui.onrender.com/bot');
+    this.logger.log('Bot webhook configurado');
+  }
+
+  getWebhookMiddleware() {
+    return this.bot.webhookCallback('/bot');
   }
 }
