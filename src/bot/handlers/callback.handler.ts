@@ -21,7 +21,13 @@ export function registerCallbackHandler(bot: Telegraf, usersService: UsersServic
       });
 
       const available = services
-        .map((s) => ({ ...s, stock: s.accounts.reduce((sum, a) => sum + a.profiles.length, 0) }))
+        .map((s) => ({
+          ...s,
+          stock: s.accounts.reduce((sum, a) => {
+            if (a.type === 'full' && !a.isOccupied) return sum + 1;
+            return sum + a.profiles.length;
+          }, 0),
+        }))
         .filter((s) => s.stock > 0);
 
       if (available.length === 0) return ctx.reply('No hay servicios disponibles.');
