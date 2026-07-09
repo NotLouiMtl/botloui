@@ -4,6 +4,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { AdminService } from './admin.service';
 import { AddBalanceDto } from '../common/dto/add-balance.dto';
 import { CreateStockDto } from '../common/dto/create-stock.dto';
+import { BulkImportDto } from '../common/dto/bulk-import.dto';
 import { BlockUserDto } from '../common/dto/block-user.dto';
 import { CreateServiceDto } from '../common/dto/create-service.dto';
 
@@ -30,6 +31,11 @@ export class AdminController {
   @Post('create-account')
   async createAccount(@Body() body: CreateStockDto) {
     return this.adminService.createStock(body.serviceId, body.email, body.password, body.pin, body.profiles, body.profilePins, body.type);
+  }
+
+  @Post('stock/bulk-import')
+  async bulkImport(@Body() body: BulkImportDto) {
+    return this.adminService.bulkImport(body.serviceId, body.emails, body.password, body.pin);
   }
 
   @Get('stock')

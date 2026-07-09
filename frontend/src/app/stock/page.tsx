@@ -5,11 +5,13 @@ import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import Navbar from '@/components/Navbar';
 import CreateAccountModal from '@/components/CreateAccountModal';
+import BulkImportModal from '@/components/BulkImportModal';
 
 export default function StockPage() {
   const [stock, setStock] = useState<any>(null);
   const [accounts, setAccounts] = useState<any[]>([]);
   const [showCreate, setShowCreate] = useState(false);
+  const [showBulk, setShowBulk] = useState(false);
   const [showDetail, setShowDetail] = useState<number | null>(null);
   const [editAccount, setEditAccount] = useState<any>(null);
   const [editProfile, setEditProfile] = useState<any>(null);
@@ -115,12 +117,20 @@ export default function StockPage() {
       <main className="p-6 max-w-5xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold">Stock</h1>
-          <button
-            onClick={() => setShowCreate(true)}
-            className="bg-blue-600 hover:bg-blue-700 rounded-lg px-4 py-2 text-sm transition"
-          >
-            + Agregar stock
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowBulk(true)}
+              className="bg-purple-600 hover:bg-purple-700 rounded-lg px-4 py-2 text-sm transition"
+            >
+              + Importación masiva
+            </button>
+            <button
+              onClick={() => setShowCreate(true)}
+              className="bg-blue-600 hover:bg-blue-700 rounded-lg px-4 py-2 text-sm transition"
+            >
+              + Agregar stock
+            </button>
+          </div>
         </div>
 
         {stock && (
@@ -286,6 +296,7 @@ export default function StockPage() {
         )}
 
         {showCreate && <CreateAccountModal onClose={() => setShowCreate(false)} onSuccess={load} />}
+        {showBulk && <BulkImportModal onClose={() => setShowBulk(false)} onSuccess={load} />}
 
         {editAccount && (
           <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50" onClick={() => !saving && setEditAccount(null)}>

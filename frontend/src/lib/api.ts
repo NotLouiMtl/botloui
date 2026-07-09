@@ -68,4 +68,6 @@ export const api = {
     request('/admin/set-username', { method: 'POST', body: JSON.stringify({ username }) }),
   makeAdmin: (telegramId: string, password: string, username?: string) =>
     request('/admin/make-admin', { method: 'POST', body: JSON.stringify({ telegramId, password, username }) }),
+  bulkImport: (data: { serviceId: number; emails: string[]; password: string; pin?: string }) =>
+    request('/admin/stock/bulk-import', { method: 'POST', body: JSON.stringify(data) }),
 };

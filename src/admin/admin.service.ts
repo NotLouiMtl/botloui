@@ -277,6 +277,19 @@ export class AdminService {
     });
   }
 
+  async bulkImport(serviceId: number, emails: string[], password: string, pin?: string) {
+    return this.prisma.$transaction(async (tx) => {
+      const accounts = await Promise.all(
+        emails.map((email) =>
+          tx.account.create({
+            data: { serviceId, email, password, pin, type: 'full' },
+          }),
+        ),
+      );
+      return { created: accounts.length, accounts };
+    });
+  }
+
   async setUsername(userId: number, username: string) {
     return this.prisma.user.update({
       where: { id: userId },
